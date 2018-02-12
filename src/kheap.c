@@ -98,9 +98,11 @@ heap_t* create_heap(u32int start, u32int end, u32int max, u8int supervisor, u8in
 
    // We start off with one large hole in the index.
    header_t *hole = (header_t *)start;
-   hole->size = end-start;
+   hole->size = end - start;
    hole->magic = HEAP_MAGIC;
    hole->is_hole = 1;
+
+   insert_ordered_array((type_t)hole, &heap->index); 
 
    return heap;
 }
