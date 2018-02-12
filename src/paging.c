@@ -121,7 +121,7 @@ void initialise_paging()
     // Let's make a page directory.
     kernel_directory = (page_directory_t*)kmalloc_a(sizeof(page_directory_t));
     memset(kernel_directory, 0, sizeof(page_directory_t));
-    // kernel_directory->physicalAddr = (u32int)kernel_directory->tablesPhysical;
+    kernel_directory->physicalAddr = (u32int)kernel_directory->tablesPhysical;
     current_directory = kernel_directory;
     // Map some pages in the kernel heap area.
     // Here we call get_page but not alloc_frame. This causes page_table_t's 
@@ -158,7 +158,7 @@ void initialise_paging()
 
     // Now, enable paging!
     switch_page_directory(kernel_directory);
-    // enable_paging();
+    enable_paging();
 
     // Initialise the kernel heap.
     kheap = create_heap(KHEAP_START, KHEAP_START+KHEAP_INITIAL_SIZE, 0xCFFFF000, 0, 0);
