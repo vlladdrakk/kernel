@@ -54,4 +54,9 @@ void free_uheap(u32int idx);
 **/
 heap_t* create_uheap(u32int pid, u8int supervisor, u8int readonly);
 
+/**
+   Copies src heap into destination heap
+**/
+void clone_heap(heap_t* src, heap_t* dst);
+
 #endif

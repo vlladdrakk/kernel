@@ -67,4 +67,17 @@ page_t *get_page(u32int address, int make, page_directory_t *dir);
 **/
 void page_fault(registers_t regs);
 
+/**
+   Makes a copy of a page directory.
+**/
+page_directory_t *clone_directory(page_directory_t *src);
+
+/**
+   Loads kernel directory into cr3 and enables paging in cr0
+**/
+void enable_paging();
+
+// void copy_page_physical(u32int src, u32int dst);
+
+
 #endif

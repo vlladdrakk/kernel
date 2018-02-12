@@ -121,15 +121,14 @@ static s32int find_smallest_hole(u32int size, u8int page_align, heap_t *heap)
            if ((location+sizeof(header_t) & 0xFFFFF000) != 0)
                offset = 0x1000 /* page size */  - (location+sizeof(header_t))%0x1000;
 
-            if (header->size > offset)
-            {
-               u32int hole_size = header->size - offset;
+
+               s32int hole_size = (s32int)header->size - offset;
                // Can we fit now?
                if (hole_size >= size)
                    break;
-            }
+            
        }
-       else if (header->size >= size)
+       else if (header->size >= (s32int)size)
            break;
        iterator++;
    }

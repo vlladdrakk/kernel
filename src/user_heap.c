@@ -14,6 +14,11 @@ heap_map_t* uheap_map = 0;
 extern heap_t* kheap;
 
 /**
+   The current user heap
+**/
+heap_t* uheap;
+
+/**
    Create and initialize the data structures for the heaps
 **/
 void initialize_uheaps(u32int num_of_heaps)
@@ -96,9 +101,6 @@ heap_t* create_uheap(u32int pid, u8int supervisor, u8int readonly)
 	asm volatile("cli");
 	// Acquire a free heap
 	u32int idx = get_free_uheap();
-	monitor_write("index: ");
-	monitor_write_hex(idx);
-	monitor_write("\n");
 	// Claim the heap
 	uheap_map->index[idx] = pid;
 
@@ -148,4 +150,9 @@ heap_t* create_uheap(u32int pid, u8int supervisor, u8int readonly)
 	return (heap_t*) uheap_map->locations[idx];
 
 	asm volatile("sti");
+}
+
+void clone_heap(heap_t* src, heap_t* dst)
+{
+
 }

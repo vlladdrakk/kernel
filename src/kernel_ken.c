@@ -4,7 +4,7 @@
 #include "user_heap.h"
 #include "kheap.h"
 
-heap_t* uheap = 0;
+extern heap_t* uheap;
 
 void* alloc(u32int size, u8int page_align)
 {

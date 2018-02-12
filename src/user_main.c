@@ -1,6 +1,6 @@
 #include "user_main.h"
 #include "kernel_ken.h"
-
+#pragma src
 void print_arr(int* arr, int size) {
 	int i;
 	for (i = 0; i < size; i++)
@@ -13,26 +13,10 @@ void print_arr(int* arr, int size) {
 
 void user_main()
 {
-	// test reading and writing from allocated array
-	int i;
-	int* arr = (int*) alloc(sizeof(int)*10, 1);
-	print("arr location: ");
-	print_hex((unsigned int) arr);
-
-	for (i = 0; i < 10; i++)
-		arr[i] = i*2;
-
-	print("\nNew allocated array:\n");
-	print_arr(arr, 10);
-
-	// test freeing memory
-	free(arr);
-	print("After freeing:\n");
-	print_arr(arr, 10);
-
-	print("Allocating a new int (val=33)\n");
-	int* val = (int*) alloc(sizeof(int), 1);
-	*val = 33;
-
-	print_arr(arr, 10);
+	print("In user code\n");
+	unsigned int ins;
+	asm("mov %%esp, %0": "=r"(ins));
+	print("user esp: ");
+	print_hex(ins);
+	print("\n");
 }

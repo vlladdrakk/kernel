@@ -9,9 +9,13 @@
 #include "user_main.h"
 #include "multiboot.h"
 #include "user_heap.h"
+#include "task.h"
 
-int main(struct multiboot *mboot_ptr)
+u32int initial_esp;
+
+int main(struct multiboot *mboot_ptr, u32int initial_stack)
 {
+    initial_esp = initial_stack;
     // Initialise all the ISRs and segmentation
     init_descriptor_tables();
     // Initialise the screen (by clearing it)
@@ -21,12 +25,14 @@ int main(struct multiboot *mboot_ptr)
 
     initialize_uheaps(16);
 
+    // initialize_tasking();
+
     monitor_write("Welcome!\n\n");
     
     /**
        Run the user code
     **/
-    user_main();
+    // user_main();
 
     return 0;
 }
