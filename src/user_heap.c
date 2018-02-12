@@ -26,8 +26,9 @@ void initialize_uheaps(u32int num_of_heaps)
 	/**
 	   Store the user heap map in the kernel heap
 	**/
-	uheap_map = (heap_map_t*) kalloc(sizeof(heap_map_t), 0, kheap);
-	uheap_map->index = (int*) kalloc(sizeof(int) * num_of_heaps, 0, kheap);
+	u32int phys;
+	uheap_map = (heap_map_t*) kmalloc_ap(sizeof(heap_map_t), &phys);
+	uheap_map->index = (u32int*) kmalloc_p(sizeof(u32int) * num_of_heaps, &phys);
 	uheap_map->locations = (u32int*) kalloc(sizeof(u32int) * num_of_heaps, 0, kheap);
 
 	/**
