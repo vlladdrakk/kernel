@@ -1,0 +1,4 @@
+the user heap begins at the end of the kernel heap, the stack starts at the end of memory.
+
+1. clone a page directory
+2. map pages for new heap and stack.

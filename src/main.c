@@ -8,7 +8,6 @@
 #include "kheap.h"
 #include "user_main.h"
 #include "multiboot.h"
-#include "user_heap.h"
 #include "task.h"
 
 u32int initial_esp;
@@ -23,16 +22,9 @@ int main(struct multiboot *mboot_ptr, u32int initial_stack)
 
     initialise_paging();
 
-    initialize_uheaps(16);
-
-    // initialize_tasking();
-
     monitor_write("Welcome!\n\n");
-    
-    /**
-       Run the user code
-    **/
-    // user_main();
+
+    initialize_tasking();
 
     return 0;
 }

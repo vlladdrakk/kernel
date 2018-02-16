@@ -39,11 +39,11 @@ copy_page_physical:
 [GLOBAL exec_switch]
 exec_switch:
      cli;
-     mov ecx, [esp+4]   ; pointer to function
-     mov eax, [esp+8]   ; page directory physical address
-     mov ebp, [esp+12]  ; EBP
-     mov esp, [esp+16]  ; ESP
-     mov cr3, eax       ; set the page directory
+     mov ecx, [esp+4]   ; pointer to function (param 1)
+     mov eax, [esp+8]   ; page directory physical address (param 2)
+     mov ebp, [esp+12]  ; EBP (param 3)
+     mov esp, [esp+16]  ; ESP (param 4)
+     ; mov cr3, eax       ; set the page directory
      mov eax, 0x12345   ; magic number to detect a task switch
      sti;
      jmp ecx

@@ -14,9 +14,11 @@ void print_arr(int* arr, int size) {
 void user_main()
 {
 	print("In user code\n");
-	unsigned int ins;
-	asm("mov %%esp, %0": "=r"(ins));
-	print("user esp: ");
-	print_hex(ins);
-	print("\n");
+	int i;
+
+	for (i = 0; i < 10; i++)
+	{
+		print_dec(i);
+		print("\n");
+	}
 }

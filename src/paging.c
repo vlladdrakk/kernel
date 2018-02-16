@@ -17,6 +17,7 @@ u32int nframes;
 // Defined in kheap.c
 extern u32int placement_address;
 extern heap_t* kheap;
+extern heap_t* uheap;
 
 // Macros used in the bitset algorithms.
 #define INDEX_FROM_BIT(a) (a/(8*4))
@@ -103,7 +104,7 @@ void free_frame(page_t *page)
     }
     else
     {
-        clear_frame(frame);
+        clear_frame(frame * 0x1000);
         page->frame = 0x0;
     }
 }
@@ -115,8 +116,8 @@ void initialise_paging()
     u32int mem_end_page = 0x1000000;
     
     nframes = mem_end_page / 0x1000;
-    frames = (u32int*)kmalloc(INDEX_FROM_BIT(nframes));
-    memset(frames, 0, INDEX_FROM_BIT(nframes));
+    frames = (u32int*)kmalloc(INDEX_FROM_BIT(nframes) * sizeof(u32int));
+    memset(frames, 0, INDEX_FROM_BIT(nframes) * sizeof(u32int));
     
     // Let's make a page directory.
     kernel_directory = (page_directory_t*)kmalloc_a(sizeof(page_directory_t));
@@ -162,6 +163,8 @@ void initialise_paging()
 
     // Initialise the kernel heap.
     kheap = create_heap(KHEAP_START, KHEAP_START+KHEAP_INITIAL_SIZE, 0xCFFFF000, 0, 0);
+    uheap = kheap;
+    page_directory_t* copy = clone_directory(kernel_directory);
 }
 
 /**
@@ -172,13 +175,13 @@ void enable_paging()
     // Logical or value in cr0 to enable paging
     u32int cr0;
     asm volatile("mov %%cr0, %0": "=r"(cr0));
-    cr0 |= 0x80000001;
+    cr0 |= 0x80000000;
     asm volatile("mov %0, %%cr0":: "r"(cr0));
 }
 
 void switch_page_directory(page_directory_t *dir)
 {
-    asm volatile("mov %0, %%cr3":: "r"(&dir->tablesPhysical));
+    asm volatile("mov %0, %%cr3":: "r"(dir->physicalAddr));
 }
 
 page_t *get_page(u32int address, int make, page_directory_t *dir)
@@ -225,7 +228,7 @@ void page_fault(registers_t regs)
     if (rw) {monitor_write("read-only ");}
     if (us) {monitor_write("user-mode ");}
     if (reserved) {monitor_write("reserved ");}
-    monitor_write(") at 0x");
+    monitor_write(") at ");
     monitor_write_hex(faulting_address);
     monitor_write("\n");
     PANIC("Page fault");
@@ -236,7 +239,7 @@ static page_table_t *clone_table(page_table_t *src, u32int *physAddr)
     // Make a new page table, which is page aligned.
     page_table_t *table = (page_table_t*)kmalloc_ap(sizeof(page_table_t), physAddr);
     // Ensure that the new table is blank.
-    memset(table, 0, sizeof(page_directory_t));
+    memset(table, 0, sizeof(page_table_t));
 
     // For every entry in the table...
     int i;
