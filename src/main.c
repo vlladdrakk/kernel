@@ -22,7 +22,7 @@ int main(struct multiboot *mboot_ptr, u32int initial_stack)
 
     initialise_paging();
 
-    monitor_write("Welcome!\n\n");
+    monitor_write("Welcome!\n");
 
     initialize_tasking();
 

@@ -17,7 +17,9 @@ u32int nframes;
 // Defined in kheap.c
 extern u32int placement_address;
 extern heap_t* kheap;
-extern heap_t* uheap;
+extern heap_t* current_heap;
+
+void copy_page_physical(u32int src, u32int dest);
 
 // Macros used in the bitset algorithms.
 #define INDEX_FROM_BIT(a) (a/(8*4))
@@ -123,14 +125,14 @@ void initialise_paging()
     kernel_directory = (page_directory_t*)kmalloc_a(sizeof(page_directory_t));
     memset(kernel_directory, 0, sizeof(page_directory_t));
     kernel_directory->physicalAddr = (u32int)kernel_directory->tablesPhysical;
-    current_directory = kernel_directory;
+
     // Map some pages in the kernel heap area.
     // Here we call get_page but not alloc_frame. This causes page_table_t's 
     // to be created where necessary. We can't allocate frames yet because they
     // they need to be identity mapped first below, and yet we can't increase
     // placement_address between identity mapping and enabling the heap!
-    int i = 0;
-    for (i = KHEAP_START; i < KHEAP_START+KHEAP_INITIAL_SIZE; i += 0x1000)
+    u32int i = 0;
+    for (i = KHEAP_START; i < KHEAP_MAX_ADDRESS; i += 0x1000)
         get_page(i, 1, kernel_directory);
 
     // We need to identity map (phys addr = virt addr) from
@@ -158,13 +160,25 @@ void initialise_paging()
     register_interrupt_handler(14, page_fault);
 
     // Now, enable paging!
+    // current_directory = kernel_directory;
     switch_page_directory(kernel_directory);
     enable_paging();
 
+    u32int cr3;
+    asm volatile("mov %%cr3, %0": "=r"(cr3));
+    monitor_write("cr3: ");
+    monitor_write_hex(cr3);
+    monitor_write("\nkernel_location: ");
+    monitor_write_hex(kernel_directory->physicalAddr);
+    monitor_write("\n");
+
     // Initialise the kernel heap.
-    kheap = create_heap(KHEAP_START, KHEAP_START+KHEAP_INITIAL_SIZE, 0xCFFFF000, 0, 0);
-    uheap = kheap;
-    page_directory_t* copy = clone_directory(kernel_directory);
+    kheap = create_heap(KHEAP_START, KHEAP_START+KHEAP_INITIAL_SIZE, KHEAP_MAX_ADDRESS, 0, 0);
+    current_heap = kheap;
+
+    // current_directory = clone_directory(kernel_directory);
+    // switch_page_directory(current_directory);
+    // enable_paging();
 }
 
 /**
@@ -261,16 +275,6 @@ static page_table_t *clone_table(page_table_t *src, u32int *physAddr)
     }
     return table;
 }
-
-// void copy_page_physical(u32int src, u32int dst)
-// {
-//     u32int* src_ptr = (u32int*)src;
-//     u32int* dst_ptr = (u32int*)dst;
-//     int i;
-//     for (i = 0; i < 0x1000; i++)
-//         dst_ptr[i] = src_ptr[i];
-
-// }
 
 page_directory_t *clone_directory(page_directory_t *src)
 {

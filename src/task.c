@@ -4,6 +4,7 @@
 #include "user_main.h"
 
 extern heap_t* kheap;
+extern heap_t* current_heap;
 extern page_directory_t* kernel_directory;
 extern page_directory_t* current_directory;
 extern initial_esp;
@@ -18,6 +19,7 @@ u32int next_pid = 1;
 
 void initialize_tasking()
 {
+	asm volatile("cli");
 	// allocate memory for the current task on the kernel heap
 	current_task = (task_t*) kmalloc(sizeof(task_t));
 
@@ -27,29 +29,33 @@ void initialize_tasking()
 	current_task->prev = 0;
 	current_task->age = 0;
 
-	// set the return address on the top of the stack
-	u32int return_addr;
-	asm volatile("mov %0, -8(%%ebp)": "=r"(return_addr));
-	current_task->regs.esp = return_addr;
-
-	// Set the esp and ebp for the task
-	current_task->regs.esp -= 4;
-	current_task->regs.ebp = current_task->regs.esp;
-	current_task->regs.eip = (u32int)user_main;
-
-	// Put the task on the ready queue
-	ready_queue = current_task;
-
-	/**
-		These lines are commented out because there is a problem with
-		page directories that are created by the clone directory function.
-	**/
 	// The page directory for this task is the kernel directory
 	current_task->directory = clone_directory(kernel_directory);
 	current_directory = current_task->directory;
 	switch_page_directory(current_directory);
 
+	u32int heap_start = 0x7EFE000 - 0x42000;
+	u32int heap_end = heap_start +  0x10000;
+	monitor_write("here\n");
+	monitor_write_hex(current_directory->physicalAddr);
+	monitor_write("\n");
+
+	int i;
+	for (i = heap_start; i < heap_end; i += 0x1000)
+		alloc_frame(get_page(i, 1, current_directory), 0, 1);
+
+
+	current_task->heap = create_heap(heap_start, heap_end, heap_end + 0x30000, 0, 0);
+
+		// Set the esp and ebp for the task
+	current_task->regs.esp = 0x7EFE000 - 0x2000;
+	current_task->regs.ebp = current_task->regs.esp;
+	current_task->regs.eip = (u32int)user_main;
+
+	current_heap = current_task->heap;
+
 	exec_switch(current_task->regs.eip, current_directory->physicalAddr, current_task->regs.ebp, current_task->regs.esp);
+	asm volatile("sti");
 }
 
 /**
@@ -70,7 +76,7 @@ int fork()
 	child->priority = parent->priority;
 	child->id = next_pid++;
 	child->user_esp = parent->user_esp;
-	child->heap = (heap_t*)create_uheap(child->id, 0, 0);
+	// child->heap = (heap_t*)create_uheap(child->id, 0, 0);
 
 	// create new stack, set esp and ebp
 	u32int stack_phys;
