@@ -32,27 +32,29 @@ void initialize_tasking()
 	// The page directory for this task is the kernel directory
 	current_task->directory = clone_directory(kernel_directory);
 	current_directory = current_task->directory;
-	switch_page_directory(current_directory);
 
 	u32int heap_start = 0x7EFE000 - 0x42000;
 	u32int heap_end = heap_start +  0x10000;
 	monitor_write("here\n");
-	monitor_write_hex(current_directory->physicalAddr);
-	monitor_write("\n");
+	current_task->heap = create_heap(heap_start, heap_end, heap_end + 0x30000, 0, 0);
 
-	int i;
+	switch_page_directory(current_directory);
+
+	monitor_write("here\n");
+
+	u32int i;
 	for (i = heap_start; i < heap_end; i += 0x1000)
 		alloc_frame(get_page(i, 1, current_directory), 0, 1);
 
 
-	current_task->heap = create_heap(heap_start, heap_end, heap_end + 0x30000, 0, 0);
+	
 
 		// Set the esp and ebp for the task
 	current_task->regs.esp = 0x7EFE000 - 0x2000;
 	current_task->regs.ebp = current_task->regs.esp;
 	current_task->regs.eip = (u32int)user_main;
 
-	current_heap = current_task->heap;
+	// current_heap = current_task->heap;
 
 	exec_switch(current_task->regs.eip, current_directory->physicalAddr, current_task->regs.ebp, current_task->regs.esp);
 	asm volatile("sti");

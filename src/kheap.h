@@ -83,4 +83,6 @@ heap_t* create_heap(u32int start, u32int end, u32int max, u8int supervisor, u8in
 
 void* kalloc(u32int size, u8int page_align, heap_t *heap);
 
+void mfree(void *p, heap_t *heap);
+
 #endif // KHEAP_H

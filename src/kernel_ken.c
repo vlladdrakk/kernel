@@ -3,14 +3,16 @@
 #include "common.h"
 #include "kheap.h"
 
+extern heap_t* current_heap;
+
 void* alloc(u32int size, u8int page_align)
 {
-	//borked
+	return kalloc(size, page_align, current_heap);
 }
 
 void free(void* ptr)
 {
-	// kfree(ptr, uheap);
+	mfree(ptr, current_heap);
 }
 
 // Output a null-terminated ASCII string to the monitor
